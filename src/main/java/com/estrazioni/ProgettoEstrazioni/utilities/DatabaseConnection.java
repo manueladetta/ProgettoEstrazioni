@@ -113,15 +113,15 @@ public class DatabaseConnection {
 	}
 	
 	// Metodo che restituisce uno statement 
-	private static Statement creaStatement(Connection connection) throws SQLException {
-		return connection.createStatement();
+	private static Statement creaStatement() throws SQLException {
+		return con.createStatement();
 	}
 	
 	// Metodo per creare recuperare l'elenco dei partecipanti
-	private List<Partecipante> getPartecipanti(Connection connection) throws SQLException {
+	private List<Partecipante> getPartecipanti() throws SQLException {
 		List<Partecipante> elencoPartecipanti = new ArrayList<>();
 
-		Statement stm = creaStatement(connection);
+		Statement stm = creaStatement();
 		
 		ResultSet rs = stm.executeQuery("SELECT * FROM partecipanti");
 		
@@ -133,22 +133,22 @@ public class DatabaseConnection {
 	}
 	
 	// Metodo che esegue una query usando uno Statement
-	private static void eseguiStatement(Connection connection, String query) throws SQLException {
-		Statement stm = creaStatement(connection);
+	private static void eseguiStatement(String query) throws SQLException {
+		Statement stm = creaStatement();
 		stm.executeUpdate(query);
 		chiudiStatement(stm);
 	}
 	
 	// Metodo che inizializza il database
-	public static void creaTabelle(Connection connection) throws SQLException {
-		creaTabellaPartecipanti(connection);
-		creaTabellaEstrazioni(connection);
+	public static void creaTabelle() throws SQLException {
+		creaTabellaPartecipanti();
+		creaTabellaEstrazioni();
 	}
 	
 	// Metodo per creare la tabella contenente l'elenco dei partecipanti in caso non esistesse già
-	private static void creaTabellaPartecipanti(Connection connection) throws SQLException {
+	private static void creaTabellaPartecipanti() throws SQLException {
 		// Drop della tabella se esiste
-		dropTabella(connection, "partecipanti");
+		dropTabella("partecipanti");
 
 		String query = "CREATE TABLE partecipanti ("
 				+ " id int NOT NULL AUTO_INCREMENT, "
@@ -156,15 +156,15 @@ public class DatabaseConnection {
 				+ " sede varchar(255) NOT NULL, "
 				+ " PRIMARY KEY (id));";
 		
-		eseguiStatement(connection, query);
+		eseguiStatement(query);
 		
 		System.out.println("Creata tabella PARTECIPANTI");
 	}
 	
 	// Metodo per creare la tabella contenente l'elenco delle estrazioni in caso non esistesse già
-	private static void creaTabellaEstrazioni(Connection connection) throws SQLException {	
+	private static void creaTabellaEstrazioni() throws SQLException {	
 		// Drop della tabella se esiste
-		dropTabella(connection, "estrazioni");
+		dropTabella("estrazioni");
 		
 		String query = "CREATE TABLE estrazioni ("
 			+ " id int NOT NULL AUTO_INCREMENT, "
@@ -172,15 +172,15 @@ public class DatabaseConnection {
 			+ " timestamp_estrazione TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
 			+ " PRIMARY KEY (id));";
 	
-		eseguiStatement(connection, query);
+		eseguiStatement(query);
 		
 		System.out.println("Creata tabella ESTRAZIONI");
 	}
 	
 	// Metodo che esegue il drop di una tabella passata come parametro
-	private static void dropTabella(Connection connection, String tabella) throws SQLException {
+	private static void dropTabella(String tabella) throws SQLException {
 		String query = "DROP TABLE IF EXISTS " + tabella + ";"; 
-		eseguiStatement(connection, query);
+		eseguiStatement(query);
 	}
 	
 	// Metodo per chiudere uno statement
@@ -196,7 +196,7 @@ public class DatabaseConnection {
 	}
 	
 	// Metodo per chiudere una connessione
-	private static void chiudiConnection(Connection connection) {
+	private static void chiudiConnection() {
 		// Chiudo la connessione
 		if (con != null) {
 			try {
@@ -213,14 +213,14 @@ public class DatabaseConnection {
 		Connection con = getDatabaseConnection();
 		try {
 			System.out.println("Creo le tabelle");
-			creaTabelle(con);
+			creaTabelle();
 			System.out.println("Tabelle create");
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.out.println(e.getMessage());
 		} finally {
 			System.out.println("Chiudo la connessione");
-			chiudiConnection(con);
+			chiudiConnection();
 			System.out.println("Connessione chiusa");
 		}
 		
