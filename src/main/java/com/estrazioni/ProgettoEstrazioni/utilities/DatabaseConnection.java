@@ -32,7 +32,7 @@ public class DatabaseConnection {
 	private static String db_user = "", db_url = "", db_password = "", db_schema = "";	
 	
 	 public DatabaseConnection(){
-
+		 getDatabaseConnection();
 	 }
 	
 	// Pattern Singleton
@@ -237,7 +237,7 @@ public class DatabaseConnection {
 	}
 	
 	// Metodo per chiudere una connessione
-	private static void chiudiConnection() {
+	public static void chiudiConnection() {
 		// Chiudo la connessione
 		if (con != null) {
 			try {
@@ -354,6 +354,12 @@ public class DatabaseConnection {
 	public static void svuotaDati() throws SQLException {
 		svuotaTabella("estrazioni");
 		svuotaTabella("partecipanti");
+	}
+	
+	// Metodo che elimina le tabelle
+	public static void eliminaTabelle() throws SQLException {
+		dropTabella("partecipanti");
+		dropTabella("estrazioni");
 	}
 	
 	public static void main(String[] args) {
