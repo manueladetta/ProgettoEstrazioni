@@ -21,6 +21,7 @@ import java.util.Random;
 
 import com.estrazioni.ProgettoEstrazioni.model.Estrazione;
 import com.estrazioni.ProgettoEstrazioni.model.Partecipante;
+import com.estrazioni.ProgettoEstrazioni.model.SituazionePartecipante;
 
 public class DatabaseConnection {
 	
@@ -118,7 +119,7 @@ public class DatabaseConnection {
 //			conn = DriverManager.getConnection
 //					("jdbc:mysql://localhost:3306/?user=root&password=Sterpaglia157@_");
 //			Statement statm = conn.createStatement();
-//			int result= statm.executeUpdate("CREATE DATABASE SecondoDB");
+//			int result= statm.executeUpdate("CREATE DATABASE IF NOT EXISTS SecondoDB");
 //			
 //		} catch (SQLException e) {
 //			e.printStackTrace();
@@ -249,9 +250,8 @@ public class DatabaseConnection {
 	
 	// Metodo utilizzato per riempire la tabella partecipanti 
 	public static void inizializzaPartecipanti() {
-		
 		try {
-			svuotaPartecipanti();
+			svuotaTabella("partecipanti");
 			BufferedReader reader;
 			String line;
 			reader = new BufferedReader(new FileReader(path_csv));
@@ -287,8 +287,8 @@ public class DatabaseConnection {
 	}
 	
 	// Metodo utilizzato per svuotare il contenuto della tabella partecipanti
-	public static void svuotaPartecipanti() throws SQLException {
-		String query = "TRUNCATE TABLE partecipanti";
+	public static void svuotaTabella(String tabella) throws SQLException {
+		String query = "TRUNCATE TABLE " + tabella + ";";
 		eseguiStatement(query);
 	}
 	
@@ -307,6 +307,53 @@ public class DatabaseConnection {
 	    prepared.setTimestamp(2, timestamp);
 	    prepared.executeUpdate();
 		
+	}
+	
+	// Metodo per ottenere la situazione delle estrazioni
+	private static List<SituazionePartecipante> ottieniSituazioneEstrazioni() throws SQLException {
+		List<SituazionePartecipante> esiti = new ArrayList<>();
+		
+		Statement stm = creaStatement();
+		
+		ResultSet rs = stm.executeQuery("SELECT p.id, p.nome, p.sede, COUNT(e.partecipante) AS numEstrazioni"
+				+ " FROM estrazioni e JOIN partecipanti p ON p.id = e.partecipante"
+				+ " GROUP BY e.partecipante; ");
+		
+		while(rs.next()) {
+			SituazionePartecipante s = new SituazionePartecipante();
+			s.setId(rs.getInt("id"));
+			s.setNome(rs.getString("nome"));
+			s.setSede(rs.getString("sede"));
+			s.setNumEstrazioni(rs.getInt("numEstrazioni"));
+			esiti.add(s);
+		}
+		
+		for(SituazionePartecipante e : esiti) {
+			rs = stm.executeQuery("SELECT timestamp_estrazione"
+					+ " FROM estrazioni"
+					+ " WHERE partecipante = " + e.getId()
+					+ " ORDER BY timestamp_estrazione DESC\r\n"
+					+ " LIMIT 1;");
+			while(rs.next()) {
+				e.setTimestamp_utltima_estrazione(rs.getString("timestamp_estrazione"));
+			}
+		}
+		
+		return esiti;
+	}
+	
+	// Metodo per stampare la situazione delle estrazioni
+	public static void stampaSituazioneEstrazioni() throws SQLException {
+		List<SituazionePartecipante> situa = ottieniSituazioneEstrazioni();
+		for(SituazionePartecipante s : situa) {
+			System.out.println(s);
+		}
+	}
+	
+	// Metodo che elimina i dati dalle varie tabelle del db
+	public static void svuotaDati() throws SQLException {
+		svuotaTabella("estrazioni");
+		svuotaTabella("partecipanti");
 	}
 	
 	public static void main(String[] args) {
@@ -332,6 +379,10 @@ public class DatabaseConnection {
 			for(Estrazione es : estrazioni) {
 				System.out.println(es);
 			}
+			
+			stampaSituazioneEstrazioni();
+			
+			svuotaDati();
 			
 		} catch (SQLException e) {
 			e.printStackTrace();

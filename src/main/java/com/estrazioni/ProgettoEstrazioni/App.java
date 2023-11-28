@@ -65,5 +65,7 @@ public class App
                 System.out.println("Termine esecuzione");
              }
         }
+        
+        scanner.close();
     }
 }
