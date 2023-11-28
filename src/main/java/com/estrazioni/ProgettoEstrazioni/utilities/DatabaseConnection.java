@@ -1,11 +1,14 @@
 package com.estrazioni.ProgettoEstrazioni.utilities;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -19,7 +22,7 @@ public class DatabaseConnection {
 	
 	private static Connection con = null;
 	
-	private static String path = "./resources/config.properties", jdbcDriver = "com.mysql.cj.jdbc.Driver";
+	private static String path = "./resources/config.properties", jdbcDriver = "com.mysql.cj.jdbc.Driver", path_csv = "./resources/esercizioPartecipanti.csv";
 	
 	private static String db_user = "", db_url = "", db_password = "", db_schema = "";	
 	
@@ -118,7 +121,7 @@ public class DatabaseConnection {
 	}
 	
 	// Metodo per creare recuperare l'elenco dei partecipanti
-	private List<Partecipante> getPartecipanti() throws SQLException {
+	private static List<Partecipante> getPartecipanti() throws SQLException {
 		List<Partecipante> elencoPartecipanti = new ArrayList<>();
 
 		Statement stm = creaStatement();
@@ -207,14 +210,73 @@ public class DatabaseConnection {
 		}
 	}
 	
+	// Metodo utilizzato per riempire la tabella partecipanti 
+	public static void inizializzaPartecipanti() {
+		
+		try {
+			svuotaPartecipanti();
+			BufferedReader reader;
+			String line;
+			reader = new BufferedReader(new FileReader(path_csv));
+			while ((line = reader.readLine()) != null) {
+			    String[] parts = line.split(";");
+			    String nome = parts[0];
+			    String sede = parts[1];
+			    
+//			    System.out.println("Nome: " + nome + ", Sede: " + sede);
+			    
+			    PreparedStatement prepared = creaPreparedStatement("INSERT INTO partecipanti (nome, sede) VALUES (?, ?);");
+			    prepared.setString(1, nome);
+			    prepared.setString(2, sede);
+			    prepared.executeUpdate();
+			    
+			}
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+			System.out.println(e1.getMessage());
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println(e.getMessage());
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println(e.getMessage());
+		}
+    
+	}
+	
+	// Metodo che restituisce un PreparedStatement
+	private static PreparedStatement creaPreparedStatement(String query) throws SQLException {
+		return con.prepareStatement(query);
+	}
+	
+	// Metodo utilizzato per svuotare il contenuto della tabella partecipanti
+	public static void svuotaPartecipanti() throws SQLException {
+		String query = "TRUNCATE TABLE partecipanti";
+		eseguiStatement(query);
+	}
+	
+	// Metodo che estrae casualmente uno tra i partecipanti e registra l'estrazione all'interno della relativa tabella
+	public void effettuaEstrazione() {
+		
+	}
+	
 	public static void main(String[] args) {
 //		leggiValoriConfig(path);
 		System.out.println("Apro la connessione");
-		Connection con = getDatabaseConnection();
+		con = getDatabaseConnection();
 		try {
 			System.out.println("Creo le tabelle");
 			creaTabelle();
 			System.out.println("Tabelle create");
+			System.out.println("Riempo la tabella partecipanti");
+			inizializzaPartecipanti();
+			System.out.println("Tabella partecipanti riempita");
+			
+			List<Partecipante> partecipanti = getPartecipanti();
+			for(Partecipante p : partecipanti) {
+				System.out.println(p);
+			}
+			
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.out.println(e.getMessage());
@@ -223,6 +285,7 @@ public class DatabaseConnection {
 			chiudiConnection();
 			System.out.println("Connessione chiusa");
 		}
+		
 		
 	}
 }
