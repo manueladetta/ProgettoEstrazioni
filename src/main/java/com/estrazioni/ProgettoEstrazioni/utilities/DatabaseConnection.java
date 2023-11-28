@@ -12,10 +12,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 
+import com.estrazioni.ProgettoEstrazioni.model.Estrazione;
 import com.estrazioni.ProgettoEstrazioni.model.Partecipante;
 
 public class DatabaseConnection {
@@ -120,7 +124,7 @@ public class DatabaseConnection {
 		return con.createStatement();
 	}
 	
-	// Metodo per creare recuperare l'elenco dei partecipanti
+	// Metodo per recuperare l'elenco dei partecipanti
 	private static List<Partecipante> getPartecipanti() throws SQLException {
 		List<Partecipante> elencoPartecipanti = new ArrayList<>();
 
@@ -133,6 +137,21 @@ public class DatabaseConnection {
 			elencoPartecipanti.add(p);
 		}
 		return elencoPartecipanti;
+	}
+	
+	// Metodo per recuperare l'elenco delle estrazioni in ordine dalla più recente alla meno
+	private static List<Estrazione> getEstrazioni() throws SQLException {
+		List<Estrazione> elencoEstrazioni = new ArrayList<>();
+
+		Statement stm = creaStatement();
+		
+		ResultSet rs = stm.executeQuery("SELECT * FROM estrazioni e JOIN partecipanti p ON p.id = e.partecipante ORDER BY timestamp_estrazione DESC");
+		
+		while(rs.next()) {
+			Estrazione e = new Estrazione(rs.getInt("id"), rs.getString("nome") + " - " + rs.getString("sede"), rs.getString("timestamp_estrazione"));
+			elencoEstrazioni.add(e);
+		}
+		return elencoEstrazioni;
 	}
 	
 	// Metodo che esegue una query usando uno Statement
@@ -256,7 +275,19 @@ public class DatabaseConnection {
 	}
 	
 	// Metodo che estrae casualmente uno tra i partecipanti e registra l'estrazione all'interno della relativa tabella
-	public void effettuaEstrazione() {
+	public static void effettuaEstrazione() throws SQLException {
+		List<Partecipante> partecipanti = getPartecipanti();
+		Random random = new Random();
+		int i = random.nextInt(partecipanti.size() - 1);
+		
+		Partecipante soggettoEstratto = partecipanti.get(i);
+		
+		PreparedStatement prepared = creaPreparedStatement("INSERT INTO estrazioni (partecipante, timestamp_estrazione) VALUES (?, ?);");
+	    prepared.setInt(1, soggettoEstratto.getId());
+	    LocalDateTime now = LocalDateTime.now();
+        Timestamp timestamp = Timestamp.valueOf(now);
+	    prepared.setTimestamp(2, timestamp);
+	    prepared.executeUpdate();
 		
 	}
 	
@@ -275,6 +306,13 @@ public class DatabaseConnection {
 			List<Partecipante> partecipanti = getPartecipanti();
 			for(Partecipante p : partecipanti) {
 				System.out.println(p);
+			}
+			
+			System.out.println("Eseguo un'estrazione casuale");
+			effettuaEstrazione();
+			List<Estrazione> estrazioni = getEstrazioni();
+			for(Estrazione es : estrazioni) {
+				System.out.println(es);
 			}
 			
 		} catch (SQLException e) {
