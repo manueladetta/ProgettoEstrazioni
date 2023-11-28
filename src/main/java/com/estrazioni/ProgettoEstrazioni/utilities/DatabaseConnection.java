@@ -110,6 +110,24 @@ public class DatabaseConnection {
 				}
 	}
 	
+	// Metodo che crea il DB
+//	public static void creaDB() {
+//		Connection conn;
+//		try {
+//			Class.forName("com.mysql.cj.jdbc.Driver");
+//			conn = DriverManager.getConnection
+//					("jdbc:mysql://localhost:3306/?user=root&password=Sterpaglia157@_");
+//			Statement statm = conn.createStatement();
+//			int result= statm.executeUpdate("CREATE DATABASE SecondoDB");
+//			
+//		} catch (SQLException e) {
+//			e.printStackTrace();
+//		} catch (ClassNotFoundException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} 
+//	}
+	
 	// Metodo per recuperare il Driver per un database
 	private static void getDriverClass(String driver) {
 			try {
