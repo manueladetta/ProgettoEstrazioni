@@ -148,7 +148,7 @@ public class DatabaseConnection {
 		ResultSet rs = stm.executeQuery("SELECT * FROM estrazioni e JOIN partecipanti p ON p.id = e.partecipante ORDER BY timestamp_estrazione DESC");
 		
 		while(rs.next()) {
-			Estrazione e = new Estrazione(rs.getInt("id"), rs.getString("nome") + " - " + rs.getString("sede"), rs.getString("timestamp_estrazione"));
+			Estrazione e = new Estrazione(rs.getInt("id"), rs.getString("nome") + " (" + rs.getString("sede") + ")", rs.getString("timestamp_estrazione"));
 			elencoEstrazioni.add(e);
 		}
 		return elencoEstrazioni;
