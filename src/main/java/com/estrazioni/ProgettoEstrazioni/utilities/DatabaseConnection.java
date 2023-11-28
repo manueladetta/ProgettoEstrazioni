@@ -170,9 +170,9 @@ public class DatabaseConnection {
 	// Metodo per creare la tabella contenente l'elenco dei partecipanti in caso non esistesse già
 	private static void creaTabellaPartecipanti() throws SQLException {
 		// Drop della tabella se esiste
-		dropTabella("partecipanti");
+//		dropTabella("partecipanti");
 
-		String query = "CREATE TABLE partecipanti ("
+		String query = "CREATE TABLE IF NOT EXISTS partecipanti ("
 				+ " id int NOT NULL AUTO_INCREMENT, "
 				+ " nome varchar(255) NOT NULL, "
 				+ " sede varchar(255) NOT NULL, "
@@ -186,9 +186,9 @@ public class DatabaseConnection {
 	// Metodo per creare la tabella contenente l'elenco delle estrazioni in caso non esistesse già
 	private static void creaTabellaEstrazioni() throws SQLException {	
 		// Drop della tabella se esiste
-		dropTabella("estrazioni");
+//		dropTabella("estrazioni");
 		
-		String query = "CREATE TABLE estrazioni ("
+		String query = "CREATE TABLE IF NOT EXISTS estrazioni ("
 			+ " id int NOT NULL AUTO_INCREMENT, "
 			+ " partecipante int NOT NULL, "
 			+ " timestamp_estrazione TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
