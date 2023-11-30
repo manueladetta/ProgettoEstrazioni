@@ -104,7 +104,7 @@ public class DatabaseConnection {
 					db_url = properties.getProperty("db.url");
 					db_password = properties.getProperty("db.password");
 					db_schema = properties.getProperty("db.schema");
-					System.out.println("Valori letti da file di properties: \n\t- URL: " + db_url + "\n\t- User: " + db_user + "\n\t- Password: " + db_password + "\n\t- Schema: " + db_schema);
+//					System.out.println("Valori letti da file di properties: \n\t- URL: " + db_url + "\n\t- User: " + db_user + "\n\t- Password: " + db_password + "\n\t- Schema: " + db_schema);
 //					System.out.println(properties.getProperty("script_create_schema"));
 				} catch (IOException e) {
 					System.out.println("Errore caricamento dati dal file di properties " + path + " : " + e.getMessage());
