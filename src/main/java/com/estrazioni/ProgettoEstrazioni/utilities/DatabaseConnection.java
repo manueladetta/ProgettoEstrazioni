@@ -268,6 +268,7 @@ public class DatabaseConnection {
 			    prepared.executeUpdate();
 			    
 			}
+			reader.close();
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 			System.out.println(e1.getMessage());
@@ -306,7 +307,24 @@ public class DatabaseConnection {
         Timestamp timestamp = Timestamp.valueOf(now);
 	    prepared.setTimestamp(2, timestamp);
 	    prepared.executeUpdate();
+	    
+	    Estrazione estrazione = ottieniUltimaEstrazione();
+	    System.out.println(estrazione);
 		
+	}
+	
+	// Metodo per recuperare l'ultima estrazione registrata
+	private static Estrazione ottieniUltimaEstrazione() throws SQLException {
+		Estrazione ultimaEstrazione = null;
+		
+		Statement stm = creaStatement();
+		
+		ResultSet rs = stm.executeQuery("SELECT * FROM estrazioni e JOIN partecipanti p ON p.id = e.partecipante ORDER BY timestamp_estrazione DESC LIMIT 1;");
+		
+		while(rs.next()) {
+			ultimaEstrazione = new Estrazione(rs.getInt("id"), rs.getString("nome") + " (" + rs.getString("sede") + ")", rs.getString("timestamp_estrazione"));
+		}
+		return ultimaEstrazione;
 	}
 	
 	// Metodo per ottenere la situazione delle estrazioni
