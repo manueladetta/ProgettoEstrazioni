@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.estrazioni.ProgettoEstrazioni.model.Estrazione;
 import com.estrazioni.ProgettoEstrazioni.model.Partecipante;
 import com.estrazioni.ProgettoEstrazioni.model.SituazionePartecipante;
@@ -26,6 +29,8 @@ import com.estrazioni.ProgettoEstrazioni.model.SituazionePartecipante;
 public class DatabaseConnection {
 	
 	private static Connection con = null;
+	
+	protected static final Logger logger = LogManager.getLogger("DatabaseConnection");
 	
 	private static String path = "./resources/config.properties", jdbcDriver = "com.mysql.cj.jdbc.Driver", path_csv = "./resources/esercizioPartecipanti.csv";
 	
@@ -42,8 +47,11 @@ public class DatabaseConnection {
 			leggiValoriConfig(path);
 			try {
 				getDriverClass(jdbcDriver);
+				logger.info("Recuperata la classe per il driver: " + jdbcDriver);
 				con = DriverManager.getConnection("jdbc:mysql://" + db_url + "/" + db_schema, db_user, db_password);
+				logger.info("Oggetto connessione con il database creato correttamente");
 			} catch (SQLException e) {
+				logger.error("Errore durante la connessione con il database: " + e.getErrorCode() + " - " + e.getMessage());
 				e.printStackTrace();
 			}
 			return con;
@@ -89,13 +97,17 @@ public class DatabaseConnection {
 				try {
 					inputStream = new FileInputStream(path);
 				} catch (FileNotFoundException e2) {
-					System.out.println("Errore caricamento dati dal file di properties " + path + " : " + e2.getMessage());
+//					System.out.println("Errore caricamento dati dal file di properties " + path + " : " + e2.getMessage());
+					logger.error("Errore caricamento dati dal file di properties " + path + " : " + e2.getMessage());
 				}
 				
 				if(inputStream == null) {
-					System.out.println("Errore caricamento file di properties " + path);
+//					System.out.println("Errore caricamento file di properties " + path);
+					logger.error("Errore caricamento file di properties " + path);
 					return ;
 				}
+				
+				logger.info("File di properties trovato: " + path);
 				
 				Properties properties = new Properties();
 				try {
@@ -105,9 +117,11 @@ public class DatabaseConnection {
 					db_password = properties.getProperty("db.password");
 					db_schema = properties.getProperty("db.schema");
 //					System.out.println("Valori letti da file di properties: \n\t- URL: " + db_url + "\n\t- User: " + db_user + "\n\t- Password: " + db_password + "\n\t- Schema: " + db_schema);
+					logger.info("Valori letti da file di properties: URL = " + db_url + ", User = " + db_user + ", Password: " + db_password + ", Schema: " + db_schema);
 //					System.out.println(properties.getProperty("script_create_schema"));
 				} catch (IOException e) {
-					System.out.println("Errore caricamento dati dal file di properties " + path + " : " + e.getMessage());
+//					System.out.println("Errore caricamento dati dal file di properties " + path + " : " + e.getMessage());
+					logger.error("Errore caricamento dati dal file di properties " + path + " : " + e.getMessage());
 				}
 	}
 	
@@ -134,6 +148,7 @@ public class DatabaseConnection {
 			try {
 				Class.forName(driver);
 			} catch (ClassNotFoundException e1) {
+				logger.error("Class relativa al driver " + driver + " non trovata: " + e1.getMessage());
 				e1.printStackTrace();
 			}
 	}
@@ -155,6 +170,7 @@ public class DatabaseConnection {
 			Partecipante p = new Partecipante(rs.getInt("id"), rs.getString("nome"), rs.getString("sede"));
 			elencoPartecipanti.add(p);
 		}
+		logger.info("Elenco partecipanti prelevato correttamente. Numero partecipanti = " + elencoPartecipanti.size());
 		return elencoPartecipanti;
 	}
 	
@@ -170,6 +186,7 @@ public class DatabaseConnection {
 			Estrazione e = new Estrazione(rs.getInt("id"), rs.getString("nome") + " (" + rs.getString("sede") + ")", rs.getString("timestamp_estrazione"));
 			elencoEstrazioni.add(e);
 		}
+		logger.info("Elenco estrazioni prelevato correttamente. Numero estrazioni registrate nel db = " + elencoEstrazioni.size());
 		return elencoEstrazioni;
 	}
 	
@@ -177,6 +194,7 @@ public class DatabaseConnection {
 	private static void eseguiStatement(String query) throws SQLException {
 		Statement stm = creaStatement();
 		stm.executeUpdate(query);
+		logger.info(query + " eseguita correttamente");
 		chiudiStatement(stm);
 	}
 	
@@ -199,7 +217,8 @@ public class DatabaseConnection {
 		
 		eseguiStatement(query);
 		
-		System.out.println("Creata tabella PARTECIPANTI");
+//		System.out.println("Creata tabella PARTECIPANTI");
+		logger.info("Tabella Partecipanti creata correttamente");
 	}
 	
 	// Metodo per creare la tabella contenente l'elenco delle estrazioni in caso non esistesse già
@@ -215,13 +234,15 @@ public class DatabaseConnection {
 	
 		eseguiStatement(query);
 		
-		System.out.println("Creata tabella ESTRAZIONI");
+//		System.out.println("Creata tabella ESTRAZIONI");
+		logger.info("Tabella Estrazioni creata correttamente");
 	}
 	
 	// Metodo che esegue il drop di una tabella passata come parametro
 	private static void dropTabella(String tabella) throws SQLException {
 		String query = "DROP TABLE IF EXISTS " + tabella + ";"; 
 		eseguiStatement(query);
+		logger.info("Eseguito il drop della tabella " + tabella + " con successo");
 	}
 	
 	// Metodo per chiudere uno statement
@@ -231,8 +252,10 @@ public class DatabaseConnection {
 			try {
 				stm.close();
 			} catch (SQLException e) {
+				logger.error("Errore durante la chiusura dello Statement: " + e.getErrorCode() + " - " + e.getMessage());
 				e.printStackTrace();
 			}
+			logger.info("Statment chiuso correttamente");
 		}
 	}
 	
@@ -243,8 +266,10 @@ public class DatabaseConnection {
 			try {
 				con.close();
 			} catch (SQLException e) {
+				logger.error("Errore durante la chiusura della connessione: " + e.getErrorCode() + " - " + e.getMessage());
 				e.printStackTrace();
 			}
+			logger.info("Connessione chiusa correttamente");
 		}
 	}
 	
@@ -270,14 +295,17 @@ public class DatabaseConnection {
 			}
 			reader.close();
 		} catch (FileNotFoundException e1) {
+			logger.error("File " + path_csv + " non trovato: " );
 			e1.printStackTrace();
-			System.out.println(e1.getMessage());
+//			System.out.println(e1.getMessage());
 		} catch (IOException e) {
+			logger.error("Errore durante la chiusura del buffer: " + e.getMessage());
 			e.printStackTrace();
-			System.out.println(e.getMessage());
+//			System.out.println(e.getMessage());
 		} catch (SQLException e) {
+			logger.error("Errore durante l'inserimento di un record all'interno della tabella partecipanti: " + e.getErrorCode() + " - " + e.getMessage());
 			e.printStackTrace();
-			System.out.println(e.getMessage());
+//			System.out.println(e.getMessage());
 		}
     
 	}
@@ -291,6 +319,7 @@ public class DatabaseConnection {
 	public static void svuotaTabella(String tabella) throws SQLException {
 		String query = "TRUNCATE TABLE " + tabella + ";";
 		eseguiStatement(query);
+		logger.info("Truncate sulla tabella " + tabella + " eseguito correttamente");
 	}
 	
 	// Metodo che estrae casualmente uno tra i partecipanti e registra l'estrazione all'interno della relativa tabella
@@ -309,6 +338,7 @@ public class DatabaseConnection {
 	    prepared.executeUpdate();
 	    
 	    Estrazione estrazione = ottieniUltimaEstrazione();
+	    logger.info(estrazione);
 	    System.out.println(estrazione);
 		
 	}
@@ -356,7 +386,7 @@ public class DatabaseConnection {
 				e.setTimestamp_utltima_estrazione(rs.getString("timestamp_estrazione"));
 			}
 		}
-		
+		logger.info("Sitazione estrazioni recuperata correttamente");
 		return esiti;
 	}
 	
